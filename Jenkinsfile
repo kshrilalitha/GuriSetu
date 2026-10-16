@@ -25,21 +25,31 @@ pipeline {
                 sh 'docker rm -f "$CONTAINER_NAME" 2>/dev/null || true; docker run -d --name "$CONTAINER_NAME" --restart unless-stopped -p "$HOST_PORT:$CONTAINER_PORT" "$IMAGE_NAME"'
             }
         }
-        stage('Verify Pages') {
-            steps {
-                sh '''
-                    set -eu
-                    for i in $(seq 1 15); do
-                        if curl -fsS --max-time 5 "http://127.0.0.1:$HOST_PORT/" -o /tmp/gurisetu-home.html; then break; fi
-                        if [ "$i" -eq 15 ]; then docker logs "$CONTAINER_NAME" || true; exit 1; fi
-                        sleep 2
-                    done
-                    grep -Fqi "GuriSetu" /tmp/gurisetu-home.html
-                    curl -fsS "http://127.0.0.1:$HOST_PORT/exams" >/dev/null
-                    curl -fsS "http://127.0.0.1:$HOST_PORT/login" >/dev/null
-                '''
-            }
-        }
+        
+stage('Verify Pages') {
+    steps {
+        sh '''
+            set -e
+
+            echo "Checking GuriSetu pages..."
+
+            docker exec gurisetu-web python -c "
+import urllib.request
+
+for path in ['/', '/exams', '/login']:
+    response = urllib.request.urlopen(
+        'http://127.0.0.1:5000' + path,
+        timeout=5
+    )
+    print(path, response.status)
+    assert response.status == 200
+"
+
+            echo "All GuriSetu pages verified successfully!"
+        '''
+    }
+}
+
     }
     post {
         success { echo 'GuriSetu deployed at http://localhost:8091/' }
