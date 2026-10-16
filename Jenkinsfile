@@ -4,7 +4,7 @@ pipeline {
     environment {
         IMAGE_NAME = 'gurisetu-web:latest'
         CONTAINER_NAME = 'gurisetu-web'
-        HOST_PORT = '8083'
+        HOST_PORT = '8091'
         CONTAINER_PORT = '5000'
     }
     stages {
@@ -42,7 +42,7 @@ pipeline {
         }
     }
     post {
-        success { echo 'GuriSetu deployed at http://localhost:8083/' }
+        success { echo 'GuriSetu deployed at http://localhost:8091/' }
         failure { echo 'Pipeline failed. Check Console Output for the first error.' }
         always { echo 'GuriSetu pipeline finished.' }
     }
